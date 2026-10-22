@@ -1,0 +1,33 @@
+
+# Environment secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Machine learning
+ml_training/artifacts/*.pkl
+ml_training/artifacts/*.joblib
+
+# Logs and test output
+*.log
+coverage/
+
+# IDE and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
