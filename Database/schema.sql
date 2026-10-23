@@ -119,4 +119,84 @@ CREATE  INDEX  idx_seats_service ON seats(service_id, status);
 
 
 
---CREATE THE BOOKING TABLE  TO RECORDED THE ENTERIES IN THE DATABASE  
+--CREATE THE BOOKING TABLE  TO RECORDED THE ENTERIES IN THE DATABASE
+CREATE TABLE booking (
+    id    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY ,
+    bokking_ref   VARCHAR(12) NOT NULL  UNIQUE
+    user_id BIGINT  NOT NULL REFERENCES users(id),
+    service_id   BIGINT NOT NULL  services(id),
+    status  VARCHAR (12) NOT NULL CHECK (status IN ('pending','confirmed ', 'cancelled ','expired')),
+    total_amount  NUMERIC(10,2) NOT NULL  CHECK (total_amount  >=0),
+    currency  VARCHAR(3) NOT NULL DEFAULT 'INR',
+    idemoptency_key  VARCHAR(70) UNIQUE ,
+    contact_no   VARCHAR (15) ,
+    contact_email  VARCHAR(225) ,
+    created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW( ),
+    cancelled_at TIMESTAMPTZ ,
+    updated_at  TIMESTAMPTZ NOT NULL 
+
+);
+CREATE  INDEX idx_booking_users ON booking(user_id,created_at DESC)
+ 
+
+--  passengers details store -
+
+CREATE TABLE passengers (
+    id  BIGINT GENERATED  ALWAYS AS  IDENTITY  PRIMARY KEY,
+    booking_id  BIGINT  NOT NULL REFERENCES  booking(id) ON DELETE CASCADE,
+    seat_id BIG =INT NOT NULL REFERENCES seats(id),
+    full_name  VARCHAR(100) NOT NULL,
+    age   INT CHECK (age  BETWEEN 0 AND 120),
+    gender  VARCHAR(10),
+);
+
+
+-- IN PAYMENTS THE  INCLUDED THE PAYMENTS DETAILS :-
+
+CREATE TABLE payments (
+    id   BIGINT  GENERATED ALWAYS AS PRIMARY KEY,
+    booking_id  BIGINT REFERENCES  booking(id),
+    method    VARCHAR(10 ) NOT NULL  CHECK (method IN ('card ','upi','wallet','qr','netbanking ')),
+    currency    VARCHAR(3) NOT NULL ,
+    exchange_rate  NUMERIC (12,6) NOT NULL  DEFAULT 1,
+    status  VARCHAR(10) NOT NULL  DEFAULT 'created ' CHECK (status  IN ('created', 'sucess','pending', 'failed', 'refunded')),
+    getway_order_id   VARCHAR(225),
+    getway_payment_id VARCHAR(255),
+    qr_token_hash  VARCHAR(255),
+    qr_expire_at  TIMESTAMPTZ ,
+    created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    paid_At TIMESTAMPTZ     
+);
+
+CREATE  INDEX  idx_payments ON payments(booking_id);
+
+-- CREATE   THE REFUND  SYSTEM  ACCORDING TO  THE REQUIREMENTS :-
+
+CREATE  TABLE   refund (
+    id  BIGINT  GENERATED ALWAYS AS  PRIMARY KEY ,
+    payment_id   BIGINT  NOT  NULL REFERENCES  payments(id),
+    booking_id  BIGINT NOT NULL REFERENCES  booking(id),
+    amount   NUMERIC(10,2) NOT NULL ,
+    fee  NUMERIC(10,2) NOT NULL, 
+    status  VARCHAR(12) NOT NULL  DEFAULT  'intiated', CHECK (status IN( 'intiated', 'processes','failed' )),
+    reason  VARCHAR(1000),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+
+-- THE  TABLE RECORED THE   TICKET DETAILS :-
+
+CREATE  TABLE  tickets(
+    id  BIGINT  GENERATED ALWAYS AS PRIMARY KEY ,
+    booking_id  BIGINT  NOT NULL  REFERENCES  booking(id) ON DELETE CASCADE,
+    passengers_id  BIGINT NOT NULL REFERENCES  passengers(id) ON DELETE CASCADE,
+    ticket_Code  VARCHAR(40 ) NOT NULL   UNIQUE ,
+    signature  VARCHAR(130)NOT NULL ,
+    status  VARCHAR (40) NOT NULL  DEFAULT 'valid' CHECK (status IN ('valid','used', 'cancelled')),
+    user_at TIMESTAMPTZ ,
+    issued_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+
+-- SUPPORTING TABLES    4 TABLE REQUIRED NOT  COMPULSORY :-
