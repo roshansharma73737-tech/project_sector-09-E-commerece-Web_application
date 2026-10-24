@@ -1,6 +1,8 @@
-
-
-
+"""
+scripts/create_admin.py - creates the first admin (never via public signup).
+Reads ADMIN_NAME / ADMIN_EMAIL / ADMIN_PASSWORD from backend/.env
+Usage: python scripts/create_admin.py
+"""
 import os, sys
 from pathlib import Path
 import bcrypt, psycopg2

@@ -270,3 +270,26 @@ CREATE TABLE audit_logs (                             -- admin / refund / cancel
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
   
+
+CREATE VIEW v_upcoming_services AS                 -- what users can book RIGHT NOW
+SELECT * FROM services WHERE is_active AND start_time > NOW();
+
+
+CREATE VIEW v_upcoming_occupancy AS                -- how full upcoming services are
+SELECT id, type, title, origin, destination, city, start_time, total_seats, available_seats,
+       ROUND(100.0 * (total_seats - available_seats) / total_seats, 1) AS occupancy_pct
+FROM v_upcoming_services;
+
+
+CREATE VIEW v_revenue_last_30_days AS              -- real paid bookings per day
+SELECT DATE(p.paid_at) AS day, COUNT(*) AS paid_bookings, SUM(b.total_amount) AS revenue
+FROM payments p JOIN bookings b ON b.id = p.booking_id
+WHERE p.status = 'success' AND p.paid_at >= NOW() - INTERVAL '30 days'
+GROUP BY DATE(p.paid_at) ORDER BY day DESC;
+
+
+CREATE VIEW v_top_routes_30_days AS                -- most booked routes, last 30 days
+SELECT s.type, s.origin, s.destination, COUNT(*) AS bookings, SUM(b.total_amount) AS revenue
+FROM bookings b JOIN services s ON s.id = b.service_id
+WHERE b.status = 'confirmed' AND b.created_at >= NOW() - INTERVAL '30 days' AND s.origin IS NOT NULL
+GROUP BY s.type, s.origin, s.destination ORDER BY bookings DESC;
